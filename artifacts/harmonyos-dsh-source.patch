@@ -1,0 +1,63 @@
+diff --git a/package.json b/package.json
+index 81cedbb..7b604df 100644
+--- a/package.json
++++ b/package.json
+@@ -178,5 +178,8 @@
+     "typescript": "^6.0.3",
+     "vite-tsconfig-paths": "^6.1.1",
+     "vitest": "^4.1.8"
++  },
++  "dependencies": {
++    "lightningcss-wasm": "1.32.0"
+   }
+ }
+diff --git a/packages/client/tsdown.client.ts b/packages/client/tsdown.client.ts
+index 13df9f3..0c3b6ef 100644
+--- a/packages/client/tsdown.client.ts
++++ b/packages/client/tsdown.client.ts
+@@ -13,7 +13,7 @@ import { existsSync } from 'node:fs'
+ import { basename, dirname, relative, resolve as resolvePath, sep } from 'node:path'
+ import { fileURLToPath } from 'node:url'
+ import type { UserConfig } from 'tsdown'
+-import { transform } from 'lightningcss'
++import { transform } from 'lightningcss-wasm'
+ import { PLATFORM_MODULES } from './web/src/platform.ts'
+ 
+ /**
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 1490a0f..c6b1418 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -14,6 +14,10 @@ patchedDependencies:
+ importers:
+ 
+   .:
++    dependencies:
++      lightningcss-wasm:
++        specifier: 1.32.0
++        version: 1.32.0
+     devDependencies:
+       '@agentclientprotocol/sdk':
+         specifier: 0.25.1
+@@ -12836,6 +12840,12 @@ packages:
+     os: [linux]
+     libc: [musl]
+ 
++  lightningcss-wasm@1.32.0:
++    resolution: {integrity: sha512-SteAkCtRuSCDYPGHKhLV/dDs5Bk+7I4QUxWxfk4xwsTI1rQk8MQyYtpGcd3NECsUGzK0q2/KqoVS+YHCqKHUTQ==}
++    engines: {node: '>= 12.0.0'}
++    bundledDependencies:
++      - napi-wasm
++
+   lightningcss-win32-arm64-msvc@1.32.0:
+     resolution: {integrity: sha512-8SbC8BR40pS6baCM8sbtYDSwEVQd4JlFTOlaD3gWGHfThTcABnNDBda6eTZeqbofalIJhFx0qKzgHJmcPTnGdw==}
+     engines: {node: '>= 12.0.0'}
+@@ -18068,6 +18078,8 @@ snapshots:
+   lightningcss-linux-x64-musl@1.32.0:
+     optional: true
+ 
++  lightningcss-wasm@1.32.0: {}
++
+   lightningcss-win32-arm64-msvc@1.32.0:
+     optional: true
+ 
