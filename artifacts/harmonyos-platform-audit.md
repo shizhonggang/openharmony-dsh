@@ -82,7 +82,7 @@ L0 兼容层: libdh-lnxbase.so —— Linux syscall ABI 兼容库，被 8 个内
 
 1. **hmdfs MAC（执行放行，按"出身"判定）**：
    - 用户存储（`/storage/Users`）上的二进制，**只有本机 clang 现编的能执行**；cp/cat 复制、SDK 预编译、外来源一律内核层拦（execve EPERM/EACCES）。
-   - 放行规则：主二进制带 `.note.ohos.ident` + `.codesign` → 放行；只带 `.codesign` 无 `.note.ohos.ident` → 静态放行/动态拒绝；系统路径（`/data/service/hnp/bin`，hnp_file:s0 可信域）不受限。
+   - 放行规则：主二进制带 `.note.ohos.ident` + `.codesign` → 放行；只带 `.codesign` 无 `.note.ohos.ident` → 静态放行/动态拒绝；系统路径（`$OHOS_SDK/bin`，hnp_file:s0 可信域）不受限。
    - **规避**：hnp 打包安装（SELinux 域变为 hnp_file:s0）或注入 `.note.ohos.ident` + Merkle 签名。
 
 2. **ELF 签名（.codesign，Merkle 树格式）**：
@@ -125,10 +125,10 @@ L0 兼容层: libdh-lnxbase.so —— Linux syscall ABI 兼容库，被 8 个内
 
 ### 6.1 三层结构
 ```
-/storage/Users/currentUser/    ← hmdfs（FUSE 分布式覆盖层，faked uid 20001006）
+$HOME/    ← hmdfs（FUSE 分布式覆盖层，faked uid 20001006）
     ↓ 底层
-/data/storage/el2/base/        ← hmfs（物理文件系统，标准 Unix 权限）★ 工具安装首选
-/data/storage/el2/database/    ← hmfs
+$EL2_BASE/        ← hmfs（物理文件系统，标准 Unix 权限）★ 工具安装首选
+$EL2/database/    ← hmfs
 /data/service/el2/100/hmdfs/   ← hmdfs 非账户数据
 ```
 
@@ -139,7 +139,7 @@ L0 兼容层: libdh-lnxbase.so —— Linux syscall ABI 兼容库，被 8 个内
 | 权限模型 | 抽象层，坑多 | 基本正常 |
 
 ### 6.2 EL2 存储分级（7.0 起）
-`/data/storage/el2` 从「整个 tmpfs」改为「**真数据 hmfs** + media 留 tmpfs」：el2/base、el2/database、el2/log → userdata 磁盘（**持久**）；el2/media → tmpfs（重启即失）；el2/share → sharefs。
+`$EL2` 从「整个 tmpfs」改为「**真数据 hmfs** + media 留 tmpfs」：el2/base、el2/database、el2/log → userdata 磁盘（**持久**）；el2/media → tmpfs（重启即失）；el2/share → sharefs。
 
 ### 6.3 平台级路径怪癖（今日/近期实测）
 - **`/tmp` 只读**（mktemp 报 `Read-only file system`；但 `cd /tmp` 成功，易误判）→ 需 `TMPDIR` 指向可写目录。
@@ -150,7 +150,7 @@ L0 兼容层: libdh-lnxbase.so —— Linux syscall ABI 兼容库，被 8 个内
 
 ### 6.4 权限/路径坑（对 Node 应用的直接含义）
 - npm 全局包装到 `~/.local/npm-global` 没问题，但**任何要 mmap MAP_SHARED 写输出的编译（go build）在 hmdfs 上失败**。
-- 工具装 `/data/storage/el2/base/`（hmfs，无 hmdfs 坑）最稳。
+- 工具装 `$EL2_BASE/`（hmfs，无 hmdfs 坑）最稳。
 
 ---
 
@@ -173,7 +173,7 @@ fork 慢 14 倍原因：每次 fork 做 SELinux context 分配 + hmdfs MAC 标�
 
 | 通道 | 覆盖 | 说明 |
 |---|---|---|
-| hnp（系统域） | 系统级二进制 | `/data/service/hnp/`，SELinux 可信域，可执行；不可写 |
+| hnp（系统域） | 系统级二进制 | `$OHOS_SDK/`，SELinux 可信域，可执行；不可写 |
 | ohpm（OpenHarmony 包管理器） | @ohos/* | 需华为云 registry |
 | **harmonybrew**（Homebrew 移植） | 3000+ 预编译 | `~/.harmonybrew/Cellar/`，Node v26.5.0 由此而来 |
 | cmd-pkgs（OpenHarmony 预编译仓库） | 1247 工具 | `~/usr/local/` |

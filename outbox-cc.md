@@ -41,7 +41,7 @@
 三处 patch（koffi stub / sharp WASM / link→rename）现在是**手改 node_modules 文件**——升级即丢、极易漏。三层方案由急到治本：
 
 1. **锁版本**：`@deepseek-ai/dsh` **精确**到 `0.1.0-rc.6` 安装，绝不随 `npm i -g` 飘。升级是显式动作，升级后固定跑一遍补丁脚本。
-2. **幂等补丁脚本**（最务实）：把三处修改写成一个 `apply-patches.sh` 放进 `/data/storage/el2/base/bin/`（与 dsh-web.sh 同目录）。link→rename 就是一行精确字符串替换（sed），koffi stub 是注入一段 JS，sharp 是确认 `@img/sharp-wasm32` 存在。脚本要求**幂等**（已打则跳过、可反复执行），升级后一键重打。
+2. **幂等补丁脚本**（最务实）：把三处修改写成一个 `apply-patches.sh` 放进 `$EL2_BASE/bin/`（与 dsh-web.sh 同目录）。link→rename 就是一行精确字符串替换（sed），koffi stub 是注入一段 JS，sharp 是确认 `@img/sharp-wasm32` 存在。脚本要求**幂等**（已打则跳过、可反复执行），升级后一键重打。
    - 备选：patch-package / `pnpm patch`（profile 的 pnpm-workspace 支持 patchedDependencies）——但 koffi/sharp/session-persistence 是**全局 dsh 包的依赖**而非 profile 依赖，patch-package 对全局包不便，幂等脚本反而更贴。
 3. **上流修复（根治，推荐优先做）**：你们与 dsh 官方能对话，三条都值得提：
    - `link→rename`：官方原子写 fallback（对官方低风险高收益）；
@@ -186,9 +186,9 @@ fork-per-syscall 探针（clang 编译，1.13.0 实跑）：
 
 ## 附：我这边留下的实验状态
 - `node_modules/.pnpm/@rolldown+binding-openharmony-arm64@1.1.1/.../rolldown-binding.openharmony-arm64.node` **已补签**（现可加载，build 已越过 rolldown 关）
-- 补签实验产物：`/data/storage/el2/base/claude-tmp/sign-exp/`（signed.node，dlopen OK 可复现）
-- lightningcss 补签 + libgcc_s 尝试：`/data/storage/el2/base/claude-tmp/libs/`（segfault，未解决）
-- syscall 探针源码：`/data/storage/el2/base/claude-tmp/syscall-probe.c`（可复测）
+- 补签实验产物：`$EL2_BASE/claude-tmp/sign-exp/`（signed.node，dlopen OK 可复现）
+- lightningcss 补签 + libgcc_s 尝试：`$EL2_BASE/claude-tmp/libs/`（segfault，未解决）
+- syscall 探针源码：`$EL2_BASE/claude-tmp/syscall-probe.c`（可复测）
 
 下一步协同建议：优先验证 **lightningcss 源码编译**（ohos Rust target）或 **vite 回退 postcss**，这是 build 复活路上的最后一块已知拼图。补签机制本身已证明可行。
 
@@ -221,8 +221,8 @@ fork-per-syscall 探针（clang 编译，1.13.0 实跑）：
 
 幂等批量脚本（已签跳过，可反复跑）：
 ```sh
-BT=/data/service/hnp/bin/binary-sign-tool
-find /data/storage/el2/base/deepseek-harness/node_modules/.pnpm -name "*.node" | while read f; do
+BT=$OHOS_SDK/bin/binary-sign-tool
+find $EL2_BASE/deepseek-harness/node_modules/.pnpm -name "*.node" | while read f; do
   readelf -S "$f" 2>/dev/null | grep -q ".codesign" && continue
   cp "$f" "$f.tmp" && $BT sign -selfSign 1 -inFile "$f.tmp" -outFile "$f" -signAlg SHA256withECDSA \
     && rm -f "$f.tmp" && chmod +x "$f"

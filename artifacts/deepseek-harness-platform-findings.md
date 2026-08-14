@@ -15,8 +15,8 @@
 | libc | musl（系统无 `ldd`，无法直接验证，HarmonyOS 系 musl） | — |
 | dsh 版本 | `@deepseek-ai/dsh@0.1.0-rc.6`（npm 全局安装） | `package.json` |
 | dsh 安装位置 | `~/.local/npm-global/lib/node_modules/@deepseek-ai/dsh` | `ls` |
-| 插件源码位置 | `/data/storage/el2/base/dsh-home/profiles/node_modules/@deepseek-ai/`（252 个模块，dsh 插件树完整） | `ls` |
-| DSH_HOME | `/data/storage/el2/base/dsh-home`（sessions / profiles / storages / settings.yaml） | `env` |
+| 插件源码位置 | `$EL2_BASE/dsh-home/profiles/node_modules/@deepseek-ai/`（252 个模块，dsh 插件树完整） | `ls` |
+| DSH_HOME | `$EL2_BASE/dsh-home`（sessions / profiles / storages / settings.yaml） | `env` |
 | 沙箱 | 禁用：`$DSH_HOME/disable-sandbox.patch.yml`（`sandbox: disabled: true`），启动脚本设 `DSH_PERMISSION_MODE=danger-full-access` | `cat` |
 | `/tmp` | **只读**（`mktemp` 报 `Read-only file system`；注意 `cd /tmp` 会成功，易误判） | `mktemp` |
 | 硬链接 | **系统级禁止**：`ln` 在 `$HOME` 下报 `Operation not permitted`（全盘生效，疑似内核/安全层屏蔽 linkat） | `ln` |
@@ -24,8 +24,8 @@
 | node-pty | ✅ 本机 clang 现编：`profiles/node_modules/node-pty/build/Release/pty.node` 存在 | `ls` |
 | koffi | ⚠️ stub：`koffi/src/koffi/index.js` 为打包产物，win32 函数惰性 throw | `head` |
 | sharp | ⚠️ WASM 兜底：`@img/sharp-wasm32` | 文档+实测 |
-| 启动方式 | `/data/storage/el2/base/bin/dsh-web.sh`：`DSH_PERMISSION_MODE=danger-full-access node --expose-internals <bin.js> web` | `cat` |
-| 源码仓库 | `/data/storage/el2/base/deepseek-harness`（存在，但 **build 不可行**：rolldown 预编译 `.node` dlopen 被拒） | `ls` |
+| 启动方式 | `$EL2_BASE/bin/dsh-web.sh`：`DSH_PERMISSION_MODE=danger-full-access node --expose-internals <bin.js> web` | `cat` |
+| 源码仓库 | `$EL2_BASE/deepseek-harness`（存在，但 **build 不可行**：rolldown 预编译 `.node` dlopen 被拒） | `ls` |
 | Web UI | 运行于 `http://127.0.0.1:3080`，本次会话即在其内 | `env` |
 | 审批提示 | **本会话禁用**：需审批的动作被自动拒绝，`sandbox_permissions` 提权一律无效 | 会话运行时上下文 |
 
@@ -83,12 +83,12 @@
 
 ```text
 dsh npm 安装根      ~/.local/npm-global/lib/node_modules/@deepseek-ai/dsh
-dsh 插件源码树      /data/storage/el2/base/dsh-home/profiles/node_modules/@deepseek-ai/
-启动脚本            /data/storage/el2/base/bin/dsh-web.sh
-沙箱禁用补丁        /data/storage/el2/base/dsh-home/disable-sandbox.patch.yml
+dsh 插件源码树      $EL2_BASE/dsh-home/profiles/node_modules/@deepseek-ai/
+启动脚本            $EL2_BASE/bin/dsh-web.sh
+沙箱禁用补丁        $EL2_BASE/dsh-home/disable-sandbox.patch.yml
 会话持久化 patch    .../dsh-session-persistence-jsonl/lib/index.js   （rename 原子写，line ~1128）
 koffi stub          .../dsh/node_modules/koffi/src/koffi/index.js    （win32 函数惰性 throw）
 node-pty 现编产物   .../node-pty/build/Release/pty.node
-源码仓库（build 不通）/data/storage/el2/base/deepseek-harness
+源码仓库（build 不通）$EL2_BASE/deepseek-harness
 Web UI              http://127.0.0.1:3080
 ```

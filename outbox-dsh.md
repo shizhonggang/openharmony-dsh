@@ -28,11 +28,11 @@
 
 1. **上游预编译产物已带 ident、却缺签名**：rolldown/oxc/rollup 的 `*-openharmony-arm64.node` 全部有 `.note.ohos.ident` section，但**无 `.codesign`** → 内核拒绝 mmap(PROT_EXEC)。
 2. **现编产物是工具链自动 self-sign**：`binary-sign-tool display-sign` 读现编 pty.node 返回 `code signature is self-sign` —— 本机 clang 链接驱动自动注入了自签名。
-3. **解药已定位**：`/data/service/hnp/bin/binary-sign-tool`（ohos-sdk 26.0.0.18 自带），命令形如：
+3. **解药已定位**：`$OHOS_SDK/bin/binary-sign-tool`（ohos-sdk 26.0.0.18 自带），命令形如：
    ```
    binary-sign-tool sign -selfSign 1 -inFile unsigned.node -outFile signed.node -keyAlias ... -signAlg SHA256withECDSA ...
    ```
-   且 SDK 目录 `/data/service/hnp/ohos-sdk.org/ohos-sdk_26.0.0.18/ohos/toolchains/lib/` 内**已有现成的 OpenHarmony 调试签名材料**（`OpenHarmony.p12`、`OpenHarmonyApplication.pem`、`OpenHarmonyProfileDebug.pem`、Profile 模板）。
+   且 SDK 目录 `$OHOS_SDK/ohos-sdk.org/ohos-sdk_26.0.0.18/ohos/toolchains/lib/` 内**已有现成的 OpenHarmony 调试签名材料**（`OpenHarmony.p12`、`OpenHarmonyApplication.pem`、`OpenHarmonyProfileDebug.pem`、Profile 模板）。
 
 **推论**：给预编译 `.node` 补 self-sign，即可让 rolldown/oxc 等原生绑定通过 dlopen → **源码 build 可能因此复活**（tsdown→rolldown 那关有救）。这是比"一律现编"更强的一条路，值得优先验证。
 
@@ -84,7 +84,7 @@ dsh 的 bash 工具每命令 spawn 一次 shell，fork 慢会累积。dsh 是否
 ## 最小可复现命令（无需 keystore/cert/profile/密码）
 
 ```sh
-BT=/data/service/hnp/bin/binary-sign-tool
+BT=$OHOS_SDK/bin/binary-sign-tool
 $BT sign -selfSign 1 -inFile unsigned.node -outFile signed.node -signAlg SHA256withECDSA
 # 输出：add codesign section success / write code sign data success
 ```
@@ -206,8 +206,8 @@ route c 兜底 patch 已**备好（未应用）**：`artifacts/route-c-lightning
 
 用法（route a 卡住时，任一方 10 秒内切换）：
 ```sh
-cd /data/storage/el2/base/deepseek-harness
-git apply /storage/Users/currentUser/Documents/dsh/.shared/artifacts/route-c-lightningcss-lazy.patch
+cd $EL2_BASE/deepseek-harness
+git apply $HOME/Documents/dsh/.shared/artifacts/route-c-lightningcss-lazy.patch
 ```
 
 当前状态：Kimi 走 route a（源码编译），route c patch 已就位候命，随时可切。
@@ -265,7 +265,7 @@ git apply /storage/Users/currentUser/Documents/dsh/.shared/artifacts/route-c-lig
 ## 待办 1「stub + wasm 固化」—— 完成 ✅
 固化为两类可复现资产（都在 artifacts/ 或 bin/）：
 1. **源码层 git patch**：`artifacts/harmonyos-dsh-source.patch`（63 行，含 package.json 加 `lightningcss-wasm` 依赖 + tsdown.client.ts 一行换 import + pnpm-lock）。`git apply` 可复现，`pnpm install` 重新生成锁。
-2. **node_modules 幂等脚本**：`/data/storage/el2/base/bin/apply-dsh-patches.sh`（+ `patch_lightningcss.py`）。幂等已验证——已打好补丁时跑输出 `skip: stub already applied` + 补签循环全体跳过。升级 dsh / 重 `pnpm install` 后一键重打。
+2. **node_modules 幂等脚本**：`$EL2_BASE/bin/apply-dsh-patches.sh`（+ `patch_lightningcss.py`）。幂等已验证——已打好补丁时跑输出 `skip: stub already applied` + 补签循环全体跳过。升级 dsh / 重 `pnpm install` 后一键重打。
 
 ## 待办 2「部署切到本仓库产物」—— 可行性验证通过，但**暂缓切换**（版本现实）
 - ✅ 本仓库构建产物 `apps/cli/lib/bin.js` 能跑：`--version` 出 `0.1.0-rc.5`；`--profile web --dump-config` 完整加载插件链（timer/hmr/llm/session/typert...）无崩溃。

@@ -18,6 +18,18 @@ artifacts/
   └─ route-c-lightningcss-lazy.patch       兜底 patch（已归档，暂未采用）
 ```
 
+## 路径约定（本仓库已脱敏）
+
+文中用占位符替代作者机器的绝对路径，复现时替换为你的实际路径：
+
+| 占位符 | 含义（鸿蒙设备上的典型位置） |
+|---|---|
+| `$HOME` | 用户主目录（`/storage/Users/<你>`） |
+| `$EL2_BASE` | 应用数据分区 el2 base（`/data/storage/el2/base`） |
+| `$OHOS_SDK` | 鸿蒙 SDK / hnp 工具链目录（`/data/service/hnp`） |
+
+例如 `$EL2_BASE/deepseek-harness` 即源码仓库根；`$OHOS_SDK/bin/binary-sign-tool` 即 ELF 签名工具。
+
 ## 核心结论（三句话）
 
 1. **预编译 `.node` 缺 `.codesign` → dlopen 被拒**，用 SDK 的 `binary-sign-tool sign -selfSign 1` 批量补签即可（幂等）。

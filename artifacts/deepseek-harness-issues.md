@@ -41,7 +41,7 @@
 ```sh
 cd <dsh>/node_modules/node-pty
 export CC=clang CXX=clang++
-node /data/storage/el2/base/.harmonybrew/Cellar/node/26.5.0/libexec/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild
+node $EL2_BASE/.harmonybrew/Cellar/node/26.5.0/libexec/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild
 ```
 
 ### koffi stub（编辑 `koffi/src/koffi/index.js`）
@@ -57,9 +57,9 @@ cd <dsh> && npm install @img/sharp-wasm32 --no-save
 ```
 `@img/sharp-wasm32` 的 exports 映射 `./sharp.node → index.cjs → lib/sharp-wasm32-*.node.js`（WASM 加载器），sharp 自动兜底。
 
-### 启动脚本 `/data/storage/el2/base/bin/dsh-web.sh`
+### 启动脚本 `$EL2_BASE/bin/dsh-web.sh`
 ```sh
-DSH_HOME=/data/storage/el2/base/dsh-home DSH_PERMISSION_MODE=danger-full-access \
+DSH_HOME=$EL2_BASE/dsh-home DSH_PERMISSION_MODE=danger-full-access \
   node --expose-internals ~/.local/npm-global/lib/node_modules/@deepseek-ai/dsh/lib/bin.js web
 ```
 - `--expose-internals` 不可放 NODE_OPTIONS（Node 拒绝），只能命令行传参
@@ -93,6 +93,6 @@ DSH_HOME=/data/storage/el2/base/dsh-home DSH_PERMISSION_MODE=danger-full-access 
 6. **#1 esbuild@0.21.5 不支持 openharmony**：仅 website 的 vite@5 依赖，建议升级或标注为非核心。
 
 ## 关联
-- 源码仓库：`/data/storage/el2/base/deepseek-harness`（本机研究用，build 不通）
+- 源码仓库：`$EL2_BASE/deepseek-harness`（本机研究用，build 不通）
 - npm 安装位置：`~/.local/npm-global/lib/node_modules/@deepseek-ai/dsh`
 - 本文档为 HarmonyOS（openharmony aarch64）单机实测报告

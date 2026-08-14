@@ -20,15 +20,15 @@
 |---|---|
 | 平台 | `process.platform === 'openharmony'`，aarch64，musl |
 | Node | v26.5.0（harmonybrew） |
-| 编译器 | 仅 clang 15.0.4（`/data/service/hnp/bin`），无 gcc |
+| 编译器 | 仅 clang 15.0.4（`$OHOS_SDK/bin`），无 gcc |
 | Rust | 1.95.0，`aarch64-unknown-linux-ohos` target 已内置（`~/usr/rust-1.95.0-aarch64-unknown-linux-ohos/bin`） |
-| 签名工具 | `/data/service/hnp/bin/binary-sign-tool`（ohos-sdk 26 自带） |
-| binutils | `/data/storage/el2/base/.harmonybrew/opt/binutils/bin/readelf` |
-| 源码树 | `/data/storage/el2/base/deepseek-harness` |
+| 签名工具 | `$OHOS_SDK/bin/binary-sign-tool`（ohos-sdk 26 自带） |
+| binutils | `$EL2_BASE/.harmonybrew/opt/binutils/bin/readelf` |
+| 源码树 | `$EL2_BASE/deepseek-harness` |
 
 **两条铁律**（本平台，反复验证）：
 - 硬链接（linkat）全盘禁止（文件系统层：hmdfs 报 EPERM、hmfs 报 EACCES），原子写一律 `rename()`。
-- `/tmp` 是 erofs 只读镜像；临时文件用 `$TMPDIR` 或 `/data/storage/el2/base/tmp`。
+- `/tmp` 是 erofs 只读镜像；临时文件用 `$TMPDIR` 或 `$EL2_BASE/tmp`。
 
 ---
 
@@ -44,9 +44,9 @@
 
 ### 幂等批量补签（已签则跳过）
 ```sh
-BT=/data/service/hnp/bin/binary-sign-tool
-READELF=/data/storage/el2/base/.harmonybrew/opt/binutils/bin/readelf
-find /data/storage/el2/base/deepseek-harness/node_modules/.pnpm -name "*.node" | while read -r f; do
+BT=$OHOS_SDK/bin/binary-sign-tool
+READELF=$EL2_BASE/.harmonybrew/opt/binutils/bin/readelf
+find $EL2_BASE/deepseek-harness/node_modules/.pnpm -name "*.node" | while read -r f; do
   "$READELF" -S "$f" 2>/dev/null | grep -q ".codesign" && continue
   cp "$f" "$f.orig-bak"
   "$BT" sign -selfSign 1 -inFile "$f" -outFile "$f" -signAlg SHA256withECDSA
@@ -83,14 +83,14 @@ pnpm run build
 ### 方案②（可选，Kimi 验证）：本机 ohos Rust 源码编译
 原生产物性能更优，但需约 4.5 分钟编译 + 手改 node_modules，工程化成本高；**仅在 client 侧 CSS 处理成为性能瓶颈时启用**。
 ```sh
-export LC=/data/storage/el2/base/kimi-tmp/lightningcss-src
+export LC=$EL2_BASE/kimi-tmp/lightningcss-src
 git clone --depth 1 --branch v1.32.0 https://github.com/parcel-bundler/lightningcss.git "$LC"
 cd "$LC"
 mv rust-toolchain.toml rust-toolchain.toml.bak
-export PATH="/storage/Users/currentUser/usr/rust-1.95.0-aarch64-unknown-linux-ohos/bin:$PATH"
+export PATH="$HOME/usr/rust-1.95.0-aarch64-unknown-linux-ohos/bin:$PATH"
 cargo build -p lightningcss_node --release
 SRC="$LC/target/release/liblightningcss_node.so"
-DST=/data/storage/el2/base/deepseek-harness/node_modules/.pnpm/lightningcss@1.32.0/node_modules/lightningcss/lightningcss.openharmony-arm64.node
+DST=$EL2_BASE/deepseek-harness/node_modules/.pnpm/lightningcss@1.32.0/node_modules/lightningcss/lightningcss.openharmony-arm64.node
 rm -f "$DST"; cp -a "$SRC" "$DST"; chmod +x "$DST"
 # 验证：readelf -d 应仅 NEEDED [libc.so]；display-sign 应 self-sign
 ```
@@ -98,7 +98,7 @@ rm -f "$DST"; cp -a "$SRC" "$DST"; chmod +x "$DST"
 ## 4. 跑通 build
 
 ```sh
-cd /data/storage/el2/base/deepseek-harness
+cd $EL2_BASE/deepseek-harness
 pnpm run build        # 期望 exit 0；产物在 packages/*/lib/index.js、apps/cli/lib/bin.js
 ```
 

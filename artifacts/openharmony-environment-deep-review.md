@@ -64,30 +64,30 @@
 | `/system` `/vendor` `/cust` `/preload` `/version` | erofs | ❌ | ✅ 只读镜像 | 系统/厂商分区 |
 | `/data/...（el0–el4）` | **f2fs** | ✅ | ✅ 持久 | 应用数据（加密分级） |
 | `/data/service/...` | hmfs | ✅（部分） | ✅ | 系统服务数据 |
-| **`/storage/Users/currentUser`（=$HOME）** | **hmdfs** | ✅ | ✅（分布式，可同步） | 用户可见文件 |
-| `/storage/Users/currentUser/appdata` | sharefs | ❌（`Operation not permitted`） | ✅ | 应用私有数据 |
+| **`$HOME`（=$HOME）** | **hmdfs** | ✅ | ✅（分布式，可同步） | 用户可见文件 |
+| `$HOME/appdata` | sharefs | ❌（`Operation not permitted`） | ✅ | 应用私有数据 |
 | `/mnt/hmdfs/100/cloud` | hmdfs | — | 分布式 | 云端目录（`df` 报 Function not implemented） |
 
 ### 关键路径定位（旧文档的速查表更新）
 
 ```text
-用户主目录 $HOME      /storage/Users/currentUser           ← hmdfs（分布式，重启不丢，可跨设备）
+用户主目录 $HOME      $HOME           ← hmdfs（分布式，重启不丢，可跨设备）
                     ⚠️ 主目录在 hmdfs 上，硬链接不可用
 
-DSH_HOME             /data/storage/el2/base/dsh-home       ← f2fs（持久）
+DSH_HOME             $EL2_BASE/dsh-home       ← f2fs（持久）
                     ⚠️ 会话持久化在此，但 hmfs 拒绝硬链接（报 EACCES）
 
-临时文件              $TMPDIR = /storage/Users/currentUser/tmp   ← 系统已约定（hmdfs）
-                    另：/data/storage/el2/base/tmp（f2fs，可写）
+临时文件              $TMPDIR = $HOME/tmp   ← 系统已约定（hmdfs）
+                    另：$EL2_BASE/tmp（f2fs，可写）
 
-dsh 源码仓库          /data/storage/el2/base/deepseek-harness   ← f2fs
-harmonybrew 根        /data/storage/el2/base/.harmonybrew      ← f2fs
-Claude Code 临时      /data/storage/el2/base/claude-tmp         ← f2fs
+dsh 源码仓库          $EL2_BASE/deepseek-harness   ← f2fs
+harmonybrew 根        $EL2_BASE/.harmonybrew      ← f2fs
+Claude Code 临时      $EL2_BASE/claude-tmp         ← f2fs
 ```
 
 ### 临时文件的正确姿势
-- ✅ 环境变量 **`TMPDIR=/storage/Users/currentUser/tmp`** 已默认指向可写目录，直接用它
-- ✅ `/data/storage/el2/base/tmp`（f2fs）也可写，适合编译类临时产物
+- ✅ 环境变量 **`TMPDIR=$HOME/tmp`** 已默认指向可写目录，直接用它
+- ✅ `$EL2_BASE/tmp`（f2fs）也可写，适合编译类临时产物
 - ❌ 不要碰 `/tmp`（erofs 只读）、`/data/local/tmp`（SELinux 拒绝）
 
 ---
@@ -97,8 +97,8 @@ Claude Code 临时      /data/storage/el2/base/claude-tmp         ← f2fs
 ### 编译器与构建
 | 工具 | 位置 | 备注 |
 |---|---|---|
-| clang / clang++ | `/data/service/hnp/bin` | 版本 15.0.4，鸿蒙官方工具链（含 ohos target：`aarch64-unknown-linux-ohos-clang`） |
-| cmake / ninja | `/data/service/hnp/bin` | 纯 clang 工具链，**无 gcc/g++** |
+| clang / clang++ | `$OHOS_SDK/bin` | 版本 15.0.4，鸿蒙官方工具链（含 ohos target：`aarch64-unknown-linux-ohos-clang`） |
+| cmake / ninja | `$OHOS_SDK/bin` | 纯 clang 工具链，**无 gcc/g++** |
 | make | `$HOME/usr/local/bin` | — |
 | binutils | `$DATA/el2/base/.harmonybrew/opt/binutils` | objdump/readelf 在此 |
 
@@ -111,9 +111,9 @@ Claude Code 临时      /data/storage/el2/base/claude-tmp         ← f2fs
 | Go | ❌ 未安装 | 可考虑补装 |
 
 ### 包管理：harmonybrew（Homebrew 移植）
-- 根目录 `/data/storage/el2/base/.harmonybrew`，Cellar 约 80+ 包（binutils、cairo、glib、curl、croc、kimi-code、tailscale 等）
+- 根目录 `$EL2_BASE/.harmonybrew`，Cellar 约 80+ 包（binutils、cairo、glib、curl、croc、kimi-code、tailscale 等）
 - 是**本机唯一成体系的包来源**，比裸 npm 更适合装 C 库
-- `busybox` 在 `/data/service/hnp/bin`，toybox 无
+- `busybox` 在 `$OHOS_SDK/bin`，toybox 无
 
 ---
 

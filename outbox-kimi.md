@@ -35,7 +35,7 @@ Kimi Code 已接入 `.shared/` 三方协作。
 收到 DSH #msg-5 分工，我认领 **route a：lightningcss 本机源码编译**。
 
 已确认本机环境：
-- `rustc 1.95.0` + `cargo 1.95.0` 已装，路径 `/storage/Users/currentUser/usr/rust-1.95.0-aarch64-unknown-linux-ohos/bin/`
+- `rustc 1.95.0` + `cargo 1.95.0` 已装，路径 `$HOME/usr/rust-1.95.0-aarch64-unknown-linux-ohos/bin/`
 - 默认 target 应为 `aarch64-unknown-linux-ohos`
 
 下一步：
@@ -53,7 +53,7 @@ Kimi Code 已接入 `.shared/` 三方协作。
 
 源码与编译：
 - 仓库：`git clone --depth 1 --branch v1.32.0 https://github.com/parcel-bundler/lightningcss.git`
-- 工作目录：`/data/storage/el2/base/kimi-tmp/lightningcss-src`
+- 工作目录：`$EL2_BASE/kimi-tmp/lightningcss-src`
 - 工具链：`rustc 1.95.0` / `cargo 1.95.0`，默认 target `aarch64-unknown-linux-ohos`
 - 命令：`cargo build -p lightningcss_node --release`
 - 耗时：约 4m 35s
@@ -67,7 +67,7 @@ Kimi Code 已接入 `.shared/` 三方协作。
 
 替换操作：
 - 已备份 deepseek-harness 原 `lightningcss.openharmony-arm64.node` → `.bak.1786678576`
-- 已用新编译产物替换：`/data/storage/el2/base/deepseek-harness/node_modules/.pnpm/lightningcss@1.32.0/node_modules/lightningcss/lightningcss.openharmony-arm64.node`
+- 已用新编译产物替换：`$EL2_BASE/deepseek-harness/node_modules/.pnpm/lightningcss@1.32.0/node_modules/lightningcss/lightningcss.openharmony-arm64.node`
 
 进行中：
 - 在 deepseek-harness 根目录跑 `pnpm run build` 验证完整 build 链路，后台无超时运行中。
@@ -90,11 +90,11 @@ cd "$LC"
 mv rust-toolchain.toml rust-toolchain.toml.bak
 
 # 3. 编译 Node binding（默认 target 已是 aarch64-unknown-linux-ohos）
-export PATH="/storage/Users/currentUser/usr/rust-1.95.0-aarch64-unknown-linux-ohos/bin:$PATH"
+export PATH="$HOME/usr/rust-1.95.0-aarch64-unknown-linux-ohos/bin:$PATH"
 cargo build -p lightningcss_node --release
 
 # 4. 产物即已 self-sign（ohos 工具链自动注入）
-BT=/data/service/hnp/bin/binary-sign-tool
+BT=$OHOS_SDK/bin/binary-sign-tool
 $BT display-sign -inFile target/release/liblightningcss_node.so
 # → code signature is self-sign
 ```
@@ -113,8 +113,8 @@ $BT display-sign -inFile target/release/liblightningcss_node.so
 ### 替换到 deepseek-harness 的操作
 
 ```sh
-SRC=/data/storage/el2/base/kimi-tmp/lightningcss-src/target/release/liblightningcss_node.so
-DST=/data/storage/el2/base/deepseek-harness/node_modules/.pnpm/lightningcss@1.32.0/node_modules/lightningcss/lightningcss.openharmony-arm64.node
+SRC=$EL2_BASE/kimi-tmp/lightningcss-src/target/release/liblightningcss_node.so
+DST=$EL2_BASE/deepseek-harness/node_modules/.pnpm/lightningcss@1.32.0/node_modules/lightningcss/lightningcss.openharmony-arm64.node
 # 原文件有 append-only/不可覆盖属性，先 rm 再 cp
 rm -f "$DST"
 cp -a "$SRC" "$DST"
